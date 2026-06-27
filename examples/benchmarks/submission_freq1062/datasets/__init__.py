@@ -11,4 +11,9 @@ DATASETS: dict[str, type] = {
     "agentmemorybench": AgentMemoryBenchDataset,
 }
 
-__all__ = ["DATASETS", "LoCoMoDataset", "MemoryAgentBenchDataset", "AgentMemoryBenchDataset"]
+__all__ = [
+    "DATASETS",
+    "LoCoMoDataset",
+    "MemoryAgentBenchDataset",
+    "AgentMemoryBenchDataset",
+]

@@ -18,6 +18,7 @@ from typing import Any, Protocol, runtime_checkable
 @dataclass
 class EvidenceSpan:
     """Ground-truth evidence — which turns / sessions support a QA answer."""
+
     session_id: str
     turn_ids: list[str]
 
@@ -25,6 +26,7 @@ class EvidenceSpan:
 @dataclass
 class QAPair:
     """One question-answer pair with evidence annotations."""
+
     question: str
     answer: str
     category: str
@@ -36,6 +38,7 @@ class QAPair:
 @dataclass
 class DialogueTurn:
     """A single turn in a conversation."""
+
     dia_id: str
     speaker: str
     text: str
@@ -45,19 +48,23 @@ class DialogueTurn:
 @dataclass
 class Conversation:
     """A full conversation: turns + QA pairs."""
+
     sample_id: str
     turns: list[DialogueTurn]
     qa_pairs: list[QAPair]
 
     @property
     def session_ids(self) -> list[str]:
-        return sorted({t.session_id for t in self.turns},
-                      key=lambda s: int(s.split("_")[-1]) if s.split("_")[-1].isdigit() else 0)
+        return sorted(
+            {t.session_id for t in self.turns},
+            key=lambda s: int(s.split("_")[-1]) if s.split("_")[-1].isdigit() else 0,
+        )
 
 
 @dataclass
 class BenchmarkDataset:
     """A loaded dataset ready for benchmarking."""
+
     name: str
     conversations: list[Conversation]
     description: str = ""
@@ -79,6 +86,7 @@ class BenchmarkDataset:
 @dataclass
 class RetrievedItem:
     """One item returned by a memory system search."""
+
     dia_id: str
     session_id: str
     text: str
@@ -88,6 +96,7 @@ class RetrievedItem:
 @dataclass
 class QueryResult:
     """Full result of evaluating one QA pair against a memory system."""
+
     query: str
     ground_truth_answer: str
     category: str
@@ -111,6 +120,7 @@ class QueryResult:
 @dataclass
 class SystemResults:
     """Aggregated results for one memory system on one dataset."""
+
     system_name: str
     dataset_name: str
     queries: list[QueryResult] = field(default_factory=list)
@@ -186,7 +196,10 @@ class MemorySystem(Protocol):
     def store_turns(self, turns: list[DialogueTurn], namespace: str) -> None: ...
 
     def search(
-        self, query: str, namespace: str, k: int = 10,
+        self,
+        query: str,
+        namespace: str,
+        k: int = 10,
     ) -> list[RetrievedItem]: ...
 
     def teardown(self) -> None: ...
@@ -265,15 +278,29 @@ def _default_compute_scores(
         evidence_session_ids: set[str] = {ev.session_id for ev in qa.evidence}
         retrieved_session_ids: set[str] = {r.session_id for r in top_k}
         if evidence_session_ids:
-            recall = len(retrieved_session_ids & evidence_session_ids) / len(evidence_session_ids)
-            precision = (len(retrieved_session_ids & evidence_session_ids) /
-                         len(retrieved_session_ids) if retrieved_session_ids else 0.0)
+            recall = len(retrieved_session_ids & evidence_session_ids) / len(
+                evidence_session_ids
+            )
+            precision = (
+                len(retrieved_session_ids & evidence_session_ids)
+                / len(retrieved_session_ids)
+                if retrieved_session_ids
+                else 0.0
+            )
         else:
             recall = precision = 0.0
     else:
         # Turn-level evidence
-        recall = len(retrieved_turn_ids & evidence_turn_ids) / len(evidence_turn_ids) if evidence_turn_ids else 0.0
-        precision = len(retrieved_turn_ids & evidence_turn_ids) / len(retrieved_turn_ids) if retrieved_turn_ids else 0.0
+        recall = (
+            len(retrieved_turn_ids & evidence_turn_ids) / len(evidence_turn_ids)
+            if evidence_turn_ids
+            else 0.0
+        )
+        precision = (
+            len(retrieved_turn_ids & evidence_turn_ids) / len(retrieved_turn_ids)
+            if retrieved_turn_ids
+            else 0.0
+        )
 
     has_stale = False
     stale_count = 0
@@ -282,7 +309,9 @@ def _default_compute_scores(
         if evidence_turn_ids:
             stale_count = sum(1 for r in top_k if r.dia_id not in evidence_turn_ids)
         else:
-            stale_count = sum(1 for r in top_k if r.session_id not in evidence_session_ids)
+            stale_count = sum(
+                1 for r in top_k if r.session_id not in evidence_session_ids
+            )
         has_stale = stale_count > 0
 
     return recall, precision, has_stale, stale_count
@@ -307,7 +336,10 @@ def evaluate_query(
     elapsed = time.perf_counter() - start
 
     recall, precision, has_stale, stale_count, extra = dataset.compute_metrics(
-        retrieved, qa, k=k, judge_fn=judge_fn,
+        retrieved,
+        qa,
+        k=k,
+        judge_fn=judge_fn,
     )
 
     evidence_turn_ids: set[str] = set()
@@ -346,8 +378,9 @@ def format_results_table(results: list[SystemResults]) -> str:
     k_cols = " | ".join(f"Recall@{k}" for k in k_values)
     lines = [
         f"| System | Dataset | Queries | {k_cols} | Stale% | Tokens | p95 Lat |",
-        "|--------|---------|--------:" + "|".join(":------:" for _ in k_values) +
-        "|-------:|-------:|--------:|",
+        "|--------|---------|--------:"
+        + "|".join(":------:" for _ in k_values)
+        + "|-------:|-------:|--------:|",
     ]
     for r in results:
         rc = r.recall_curve()

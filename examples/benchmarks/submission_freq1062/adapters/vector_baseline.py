@@ -61,7 +61,10 @@ class VectorBaselineAdapter(MemorySystem):
                 time.sleep(self.pacing)
 
     def search(
-        self, query: str, namespace: str, k: int = 10,
+        self,
+        query: str,
+        namespace: str,
+        k: int = 10,
     ) -> list[RetrievedItem]:
         from providers import local_embed
 
@@ -87,12 +90,14 @@ class VectorBaselineAdapter(MemorySystem):
         top_idx = np.argsort(scores)[-k:][::-1]
         items = []
         for idx in top_idx:
-            items.append(RetrievedItem(
-                dia_id=turn_list[idx].dia_id,
-                session_id=turn_list[idx].session_id,
-                text=turn_list[idx].text,
-                score=float(scores[idx]),
-            ))
+            items.append(
+                RetrievedItem(
+                    dia_id=turn_list[idx].dia_id,
+                    session_id=turn_list[idx].session_id,
+                    text=turn_list[idx].text,
+                    score=float(scores[idx]),
+                )
+            )
         return items
 
     # ------------------------------------------------------------------
@@ -101,12 +106,14 @@ class VectorBaselineAdapter(MemorySystem):
 
     def dry_run(self) -> bool:
         from providers import check_keys
+
         if not check_keys("CLUSTER_API_KEY"):
             pass
 
         ns = f"dry-{uuid.uuid4().hex[:6]}"
         test_turn = DialogueTurn(
-            dia_id="DRY:1", speaker="tester",
+            dia_id="DRY:1",
+            speaker="tester",
             text="The sky is cerulean today.",
             session_id="dry-session",
         )
@@ -122,8 +129,10 @@ class VectorBaselineAdapter(MemorySystem):
             print("  [dry-run] search …")
             results = self.search("What color is the sky?", ns, k=3)
             found = any("cerulean" in r.text.lower() for r in results)
-            print(f"    ✓ retrieved {len(results)} results, "
-                  f"contains-answer={'yes' if found else 'NO'}")
+            print(
+                f"    ✓ retrieved {len(results)} results, "
+                f"contains-answer={'yes' if found else 'NO'}"
+            )
             if not found:
                 return False
 

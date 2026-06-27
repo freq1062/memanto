@@ -28,6 +28,7 @@ class ZepAdapter(MemorySystem):
 
     def setup(self) -> None:
         from zep_cloud import Zep
+
         api_key = self.api_key or os.environ.get("ZEP_API_KEY", "")
         if not api_key:
             raise ValueError("ZEP_API_KEY required")
@@ -53,10 +54,12 @@ class ZepAdapter(MemorySystem):
                 user_id=uid,
                 type="graph_episode",
                 data_type="message",
-                data=json.dumps({
-                    "role": turn.speaker,
-                    "content": f"[dia_id={turn.dia_id}] {turn.text}",
-                }),
+                data=json.dumps(
+                    {
+                        "role": turn.speaker,
+                        "content": f"[dia_id={turn.dia_id}] {turn.text}",
+                    }
+                ),
             )
             for turn in turns
         ]
@@ -64,7 +67,7 @@ class ZepAdapter(MemorySystem):
         # Zep batches max at 350 items — split if needed
         chunk_size = 300
         for chunk_start in range(0, len(items), chunk_size):
-            chunk = items[chunk_start:chunk_start + chunk_size]
+            chunk = items[chunk_start : chunk_start + chunk_size]
             self._submit_zep_batch(chunk, uid, namespace)
 
         # Poll for completion (only need to poll the last batch)
@@ -73,6 +76,7 @@ class ZepAdapter(MemorySystem):
     def _submit_zep_batch(self, items: list, uid: str, namespace: str) -> None:
         """Submit a single batch of items to Zep."""
         import re
+
         try:
             batch = self._client.batch.create()
             bid = batch.batch_id
@@ -83,7 +87,7 @@ class ZepAdapter(MemorySystem):
         except Exception as e:
             err = str(e)
             if "429" in err or "retry-after" in err.lower():
-                wait_m = re.search(r'retry-after:\s*(\d+)', err, re.IGNORECASE)
+                wait_m = re.search(r"retry-after:\s*(\d+)", err, re.IGNORECASE)
                 w = int(wait_m.group(1)) + 5 if wait_m else 60
                 print(f"    zep rate-limited, waiting {w}s …")
                 time.sleep(w)
@@ -104,7 +108,9 @@ class ZepAdapter(MemorySystem):
                             break
                         except Exception as e2:
                             if "429" in str(e2) or "retry-after" in str(e2).lower():
-                                wm = re.search(r'retry-after:\s*(\d+)', str(e2), re.IGNORECASE)
+                                wm = re.search(
+                                    r"retry-after:\s*(\d+)", str(e2), re.IGNORECASE
+                                )
                                 w = int(wm.group(1)) + 2 if wm else 30
                                 time.sleep(w)
                             else:
@@ -142,16 +148,23 @@ class ZepAdapter(MemorySystem):
                 time.sleep(5)
 
     def search(
-        self, query: str, namespace: str, k: int = 10,
+        self,
+        query: str,
+        namespace: str,
+        k: int = 10,
     ) -> list[RetrievedItem]:
         import re
+
         uid = self._user_ids.get(namespace)
         if not uid:
             return []
 
         try:
             result = self._client.graph.search(
-                user_id=uid, query=query, scope="episodes", limit=k,
+                user_id=uid,
+                query=query,
+                scope="episodes",
+                limit=k,
             )
         except Exception as e:
             print(f"    zep search error: {e}")
@@ -167,10 +180,14 @@ class ZepAdapter(MemorySystem):
                 continue
             seen.add(dia_id)
             clean = re.sub(r"\[dia_id=[^\]]*\]\s*", "", text)
-            items.append(RetrievedItem(
-                dia_id=dia_id, session_id=uid,
-                text=clean, score=ep.score or 0.0,
-            ))
+            items.append(
+                RetrievedItem(
+                    dia_id=dia_id,
+                    session_id=uid,
+                    text=clean,
+                    score=ep.score or 0.0,
+                )
+            )
         return items[:k]
 
     def teardown(self) -> None:
@@ -191,18 +208,19 @@ class ZepAdapter(MemorySystem):
     def cleanup(self) -> None:
         try:
             from zep_cloud import Zep
+
             key = os.environ.get("ZEP_API_KEY", "")
             if not key:
                 return
             cli = Zep(api_key=key)
-            for g in (cli.graph.list_all() or []):
+            for g in cli.graph.list_all() or []:
                 gid = g.graph_id if hasattr(g, "graph_id") else str(g)
                 if "bench-" in gid:
                     try:
                         cli.graph.delete(graph_id=gid)
                     except Exception:
                         pass
-            for u in (cli.user.list_ordered() or []):
+            for u in cli.user.list_ordered() or []:
                 uid = u.user_id if hasattr(u, "user_id") else str(u)
                 if "bench-" in uid:
                     try:
@@ -214,11 +232,16 @@ class ZepAdapter(MemorySystem):
 
     def dry_run(self) -> bool:
         from providers import check_keys
+
         if not check_keys("ZEP_API_KEY"):
             return False
         ns = f"dry-{uuid.uuid4().hex[:6]}"
-        t = DialogueTurn(dia_id="DRY:1", speaker="tester",
-                         text="The sky is cerulean today.", session_id="dry-session")
+        t = DialogueTurn(
+            dia_id="DRY:1",
+            speaker="tester",
+            text="The sky is cerulean today.",
+            session_id="dry-session",
+        )
         try:
             print("  [dry-run] setup …")
             self.setup()

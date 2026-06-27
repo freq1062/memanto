@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Benchmark orchestrator.
 
-    python run.py --dry-run --all
-    python run.py --datasets locomo --adapters memanto mem0
-    python run.py --datasets locomo --adapters memanto --output results.json
+python run.py --dry-run --all
+python run.py --datasets locomo --adapters memanto mem0
+python run.py --datasets locomo --adapters memanto --output results.json
 """
 
 from __future__ import annotations
@@ -37,6 +37,7 @@ def _discover_adapters() -> None:
     import importlib
     import pkgutil
     from pathlib import Path
+
     adapters_path = str(Path(__file__).resolve().parent / "adapters")
     for _, name, _ in pkgutil.iter_modules([adapters_path]):
         if name.startswith("_"):
@@ -52,16 +53,17 @@ def _discover_adapters() -> None:
                 except (TypeError, Exception):
                     pass
 
-
     # Also register mem0-infer variant (LLM extraction enabled)
     if "mem0" in ADAPTERS and "mem0-infer" not in ADAPTERS:
         from examples.benchmarks.submission_freq1062.adapters.mem0 import Mem0Adapter
+
         ADAPTERS["mem0-infer"] = lambda: Mem0Adapter(infer=True)
 
 
 def _load_dotenv() -> None:
     """Load .env from the benchmarks directory into os.environ if present."""
     from pathlib import Path
+
     env_path = Path(__file__).resolve().parent / ".env"
     if env_path.exists():
         for line in env_path.read_text().splitlines():
@@ -88,13 +90,15 @@ def run_benchmark(
     max_queries: int | None = None,
     judge_fn: callable | None = None,
 ) -> SystemResults:
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Dataset: {dataset.name}")
     print(f"Adapter: {adapter_cls.__name__}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     a = adapter_cls(**(adapter_kwargs or {}))
-    results = SystemResults(system_name=a.name(), dataset_name=dataset.name, configured_k=k)
+    results = SystemResults(
+        system_name=a.name(), dataset_name=dataset.name, configured_k=k
+    )
 
     # Checkpoint file: {adapter}_{dataset}_ckpt.json
     ckpt_path = f"{a.name()}_{dataset.name}_ckpt.json"
@@ -108,27 +112,35 @@ def run_benchmark(
         saved_queries = ckpt.get("saved_queries", [])
         results.queries = saved_queries
         if completed_ns:
-            print(f"  Found checkpoint: {len(completed_ns)} namespaces done, {len(saved_queries)} queries restored")
+            print(
+                f"  Found checkpoint: {len(completed_ns)} namespaces done, {len(saved_queries)} queries restored"
+            )
 
     try:
         print("  Setting up …")
         a.setup()
 
         from tqdm import tqdm
+
         qa_count = len(saved_queries)
-        pbar = tqdm(total=min(dataset.total_qa_pairs, max_queries or 99999),
-                    desc=f"  {adapter_cls.__name__}", unit="q", leave=False, ncols=80)
+        pbar = tqdm(
+            total=min(dataset.total_qa_pairs, max_queries or 99999),
+            desc=f"  {adapter_cls.__name__}",
+            unit="q",
+            leave=False,
+            ncols=80,
+        )
         pbar.update(qa_count)  # account for restored queries
         for ci, conv in enumerate(dataset.conversations):
             ns = f"{dataset.name.lower()}-{conv.sample_id}"
 
             if ns in completed_ns:
-                print(f"  Skipping conv {ci+1} (checkpointed)")
+                print(f"  Skipping conv {ci + 1} (checkpointed)")
                 qa_count += len(conv.qa_pairs)
                 pbar.update(len(conv.qa_pairs))
                 continue
 
-            pbar.set_description(f"  Store conv {ci+1}/{len(dataset.conversations)}")
+            pbar.set_description(f"  Store conv {ci + 1}/{len(dataset.conversations)}")
             a.store_turns(conv.turns, ns)
 
             pbar.set_description("  Querying")
@@ -146,10 +158,13 @@ def run_benchmark(
             # Save checkpoint after each conversation (queries + namespaces)
             completed_ns.add(ns)
             with open(ckpt_path, "w") as f:
-                json.dump({
-                    "completed_namespaces": list(completed_ns),
-                    "saved_queries": results.queries,
-                }, f)
+                json.dump(
+                    {
+                        "completed_namespaces": list(completed_ns),
+                        "saved_queries": results.queries,
+                    },
+                    f,
+                )
 
         pbar.close()
 
@@ -176,40 +191,60 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Agentic Memory Showdown — Benchmark Runner",
     )
-    parser.add_argument("--datasets", nargs="+", default=["locomo"],
-                        choices=list(DATASETS.keys()),
-                        help="Datasets to run")
-    parser.add_argument("--adapters", nargs="+", default=None,
-                        help="Adapters to test (default: all)")
-    parser.add_argument("--all", action="store_true",
-                        help="Run all adapters")
-    parser.add_argument("--list-adapters", action="store_true",
-                        help="List adapters and exit")
-    parser.add_argument("--sanity", type=str,
-                        help="Quick sanity check on one adapter")
-    parser.add_argument("--limit", type=int,
-                        help="Limit conversations")
-    parser.add_argument("--samples", type=int,
-                        help="Limit turns per conversation (for quick tests)")
-    parser.add_argument("--max-queries", type=int,
-                        help="Limit total queries")
-    parser.add_argument("--k", type=int, default=50,
-                        help="Top-k for recall/precision (default: 50 — enables recall curves)")
-    parser.add_argument("--output", type=str,
-                        help="Output JSON path")
-    parser.add_argument("--cleanup", action="store_true",
-                        help="Delete all test resources")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Smoke-test adapters + datasets")
-    parser.add_argument("--judge", type=str, default="groq",
-                        choices=["groq", "gemini", "local"],
-                        help="LLM judge provider (default: groq)")
-    parser.add_argument("--longmemeval-split", type=str, default="oracle",
-                        choices=["oracle", "s"],
-                        help="LongMemEval split")
-    parser.add_argument("--mab-split", type=str, default="Conflict_Resolution",
-                        choices=["Accurate_Retrieval", "Conflict_Resolution"],
-                        help="MemoryAgentBench split")
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        default=["locomo"],
+        choices=list(DATASETS.keys()),
+        help="Datasets to run",
+    )
+    parser.add_argument(
+        "--adapters", nargs="+", default=None, help="Adapters to test (default: all)"
+    )
+    parser.add_argument("--all", action="store_true", help="Run all adapters")
+    parser.add_argument(
+        "--list-adapters", action="store_true", help="List adapters and exit"
+    )
+    parser.add_argument("--sanity", type=str, help="Quick sanity check on one adapter")
+    parser.add_argument("--limit", type=int, help="Limit conversations")
+    parser.add_argument(
+        "--samples", type=int, help="Limit turns per conversation (for quick tests)"
+    )
+    parser.add_argument("--max-queries", type=int, help="Limit total queries")
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=50,
+        help="Top-k for recall/precision (default: 50 — enables recall curves)",
+    )
+    parser.add_argument("--output", type=str, help="Output JSON path")
+    parser.add_argument(
+        "--cleanup", action="store_true", help="Delete all test resources"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Smoke-test adapters + datasets"
+    )
+    parser.add_argument(
+        "--judge",
+        type=str,
+        default="groq",
+        choices=["groq", "gemini", "local"],
+        help="LLM judge provider (default: groq)",
+    )
+    parser.add_argument(
+        "--longmemeval-split",
+        type=str,
+        default="oracle",
+        choices=["oracle", "s"],
+        help="LongMemEval split",
+    )
+    parser.add_argument(
+        "--mab-split",
+        type=str,
+        default="Conflict_Resolution",
+        choices=["Accurate_Retrieval", "Conflict_Resolution"],
+        help="MemoryAgentBench split",
+    )
     args = parser.parse_args()
 
     # Resolve adapter list
@@ -242,9 +277,9 @@ def main() -> None:
 
     # --dry-run
     if args.dry_run:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("DRY RUN")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Adapters
         for aname in active:
@@ -271,14 +306,14 @@ def main() -> None:
             except Exception as e:
                 print(f"  {dname}: FAILED — {e}")
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("Dry run complete.  Run without --dry-run to execute.")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         return
 
     # --cleanup
     if args.cleanup:
-        print(f"\n{'='*60}\nCLEANUP\n{'='*60}")
+        print(f"\n{'=' * 60}\nCLEANUP\n{'=' * 60}")
         for aname in active:
             if aname not in ADAPTERS:
                 continue
@@ -288,7 +323,7 @@ def main() -> None:
                 cls().cleanup()
             except Exception as e:
                 print(f"    error: {e}")
-        print(f"\n{'='*60}\nCleanup complete.\n{'='*60}")
+        print(f"\n{'=' * 60}\nCleanup complete.\n{'=' * 60}")
         return
 
     # ---- Normal benchmark mode ----
@@ -313,16 +348,21 @@ def main() -> None:
 
         print(f"\nLoading: {ds_inst.name} …")
         ds = ds_inst.load(limit=args.limit, max_turns_per_conv=args.samples, **kwargs)
-        print(f"  {ds.total_qa_pairs} QA pairs, {ds.total_turns} turns, "
-              f"{len(ds.conversations)} conversations")
+        print(
+            f"  {ds.total_qa_pairs} QA pairs, {ds.total_turns} turns, "
+            f"{len(ds.conversations)} conversations"
+        )
 
         for aname in active:
             if aname not in ADAPTERS:
                 print(f"  Skipping unknown: {aname}")
                 continue
             res = run_benchmark(
-                ds, ds_inst, ADAPTERS[aname],
-                k=args.k, max_queries=args.max_queries,
+                ds,
+                ds_inst,
+                ADAPTERS[aname],
+                k=args.k,
+                max_queries=args.max_queries,
                 judge_fn=judge_fn,
             )
             all_results.append(res)
@@ -332,18 +372,21 @@ def main() -> None:
     # Define tracks
     TRACKS = {
         "Track 1 — Pure Retrieval (evidence matching)": [
-            "locomo", "longmemeval", "agentmemorybench",
+            "locomo",
+            "longmemeval",
+            "agentmemorybench",
         ],
         "Track 2 — LLM-Judged Retrieval (Groq judge)": [
             "memoryagentbench",
         ],
     }
 
-    print(f"\n{'='*70}\nBENCHMARK RESULTS\n{'='*70}")
+    print(f"\n{'=' * 70}\nBENCHMARK RESULTS\n{'=' * 70}")
 
     for track_name, dataset_names in TRACKS.items():
         track_results = [
-            r for r in all_results
+            r
+            for r in all_results
             if any(d in r.dataset_name.lower() for d in dataset_names)
         ]
         if not track_results:

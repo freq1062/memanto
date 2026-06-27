@@ -21,7 +21,6 @@ from interfaces import DialogueTurn, MemorySystem, RetrievedItem
 
 
 class Mem0Adapter(MemorySystem):
-
     def __init__(
         self,
         llm_provider: str = "openai",
@@ -101,6 +100,7 @@ class Mem0Adapter(MemorySystem):
 
     def cleanup(self) -> None:
         import shutil
+
         for p in [Path.home() / ".mem0"]:
             if p.exists():
                 shutil.rmtree(p, ignore_errors=True)
@@ -134,7 +134,7 @@ class Mem0Adapter(MemorySystem):
                 except Exception as e:
                     err = str(e)
                     if "429" in err:
-                        wait = (2 ** attempt) * 5
+                        wait = (2**attempt) * 5
                         print(f"    mem0 rate-limited, waiting {wait}s …")
                         time.sleep(wait)
                     elif attempt < self.max_retries:
@@ -145,19 +145,22 @@ class Mem0Adapter(MemorySystem):
             time.sleep(self.pacing)
 
     def search(
-        self, query: str, namespace: str, k: int = 10,
+        self,
+        query: str,
+        namespace: str,
+        k: int = 10,
     ) -> list[RetrievedItem]:
         user_id = self._user_ids.get(namespace)
         if not user_id:
             return []
 
         results = self._memory.search(
-            query=query, filters={"user_id": user_id}, limit=k,
+            query=query,
+            filters={"user_id": user_id},
+            limit=k,
         )
         memories = (
-            results.get("results", [])
-            if isinstance(results, dict)
-            else (results or [])
+            results.get("results", []) if isinstance(results, dict) else (results or [])
         )
 
         items: list[RetrievedItem] = []
@@ -183,12 +186,14 @@ class Mem0Adapter(MemorySystem):
             clean = re.sub(r"\[dia_id=[^\]]*\]\s*", "", text)
             clean = re.sub(r"\[\w+\]\s*", "", clean)  # [speaker]
 
-            items.append(RetrievedItem(
-                dia_id=dia_id,
-                session_id=session_id,
-                text=clean,
-                score=mem.get("score", 0.0),
-            ))
+            items.append(
+                RetrievedItem(
+                    dia_id=dia_id,
+                    session_id=session_id,
+                    text=clean,
+                    score=mem.get("score", 0.0),
+                )
+            )
         return items
 
     # ------------------------------------------------------------------
@@ -198,7 +203,8 @@ class Mem0Adapter(MemorySystem):
     def dry_run(self) -> bool:
         ns = f"dry-{uuid.uuid4().hex[:6]}"
         test_turn = DialogueTurn(
-            dia_id="DRY:1", speaker="tester",
+            dia_id="DRY:1",
+            speaker="tester",
             text="The sky is cerulean today.",
             session_id="dry-session",
         )
@@ -215,8 +221,10 @@ class Mem0Adapter(MemorySystem):
             print("  [dry-run] search …")
             results = self.search("What color is the sky?", ns, k=3)
             found = any("cerulean" in r.text.lower() for r in results)
-            print(f"    ✓ retrieved {len(results)} results, "
-                  f"contains-answer={'yes' if found else 'NO'}")
+            print(
+                f"    ✓ retrieved {len(results)} results, "
+                f"contains-answer={'yes' if found else 'NO'}"
+            )
             if not found:
                 return False
 

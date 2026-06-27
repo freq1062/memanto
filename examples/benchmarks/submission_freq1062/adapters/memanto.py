@@ -13,7 +13,6 @@ from interfaces import DialogueTurn, MemorySystem, RetrievedItem
 
 
 class MemantoAdapter(MemorySystem):
-
     def __init__(
         self,
         api_key: str = "",
@@ -60,12 +59,14 @@ class MemantoAdapter(MemorySystem):
     def cleanup(self) -> None:
         """Delete all bench-* agents, namespaces, and local sessions."""
         import os
+
         api_key = self.api_key or os.environ.get("MOORCHEH_API_KEY", "")
 
         # 1. Delete Moorcheh bench-* namespaces
         if api_key:
             try:
                 from moorcheh_sdk import MoorchehClient
+
                 mc = MoorchehClient(api_key=api_key)
                 ns_list = mc.namespaces.list()
                 for ns in ns_list.get("namespaces", []):
@@ -82,6 +83,7 @@ class MemantoAdapter(MemorySystem):
         # 2. Delete local sessions
         import shutil
         from pathlib import Path
+
         sessions = Path.home() / ".memanto" / "sessions"
         if sessions.exists():
             shutil.rmtree(sessions, ignore_errors=True)
@@ -104,9 +106,12 @@ class MemantoAdapter(MemorySystem):
                     self._key_idx = (self._key_idx + 1) % len(self._keys)
                     new_key = self._keys[self._key_idx]
                     from memanto.cli.client.sdk_client import SdkClient
+
                     self._client = SdkClient(api_key=new_key)
-                    wait = (2 ** attempt) * 3
-                    print(f"    Memanto: switched to key {self._key_idx+1}/{len(self._keys)}, waiting {wait}s …")
+                    wait = (2**attempt) * 3
+                    print(
+                        f"    Memanto: switched to key {self._key_idx + 1}/{len(self._keys)}, waiting {wait}s …"
+                    )
                     time.sleep(wait)
                 elif attempt < self.max_retries:
                     time.sleep(1)
@@ -147,7 +152,10 @@ class MemantoAdapter(MemorySystem):
                 print(f"    Memanto remember error ({turn.dia_id}): {e}")
 
     def search(
-        self, query: str, namespace: str, k: int = 10,
+        self,
+        query: str,
+        namespace: str,
+        k: int = 10,
     ) -> list[RetrievedItem]:
         agent_id = self._agent_ids.get(namespace)
         if not agent_id:
@@ -161,7 +169,10 @@ class MemantoAdapter(MemorySystem):
 
         try:
             result = self._retry(
-                self._client.recall, agent_id, query, limit=k,
+                self._client.recall,
+                agent_id,
+                query,
+                limit=k,
             )
         except Exception:
             return []
@@ -173,12 +184,14 @@ class MemantoAdapter(MemorySystem):
             tags = mem.get("tags", []) or []
             dia_id = tags[1] if len(tags) > 1 else ""
             session_id = tags[0] if tags else ""
-            items.append(RetrievedItem(
-                dia_id=dia_id,
-                session_id=session_id,
-                text=mem.get("content", mem.get("memory", "")),
-                score=mem.get("score", mem.get("similarity", 0.0)),
-            ))
+            items.append(
+                RetrievedItem(
+                    dia_id=dia_id,
+                    session_id=session_id,
+                    text=mem.get("content", mem.get("memory", "")),
+                    score=mem.get("score", mem.get("similarity", 0.0)),
+                )
+            )
         return items
 
     # ------------------------------------------------------------------
@@ -187,13 +200,15 @@ class MemantoAdapter(MemorySystem):
 
     def dry_run(self) -> bool:
         from providers import check_keys
+
         if not check_keys("MOORCHEH_API_KEY"):
             return False
         print("    ✓  MOORCHEH_API_KEY")
 
         ns = f"dry-{uuid.uuid4().hex[:6]}"
         test_turn = DialogueTurn(
-            dia_id="DRY:1", speaker="tester",
+            dia_id="DRY:1",
+            speaker="tester",
             text="The sky is cerulean today.",
             session_id="dry-session",
         )
@@ -214,13 +229,17 @@ class MemantoAdapter(MemorySystem):
             print("  [dry-run] search …")
             results = self.search("What color is the sky?", ns, k=3)
             found = any("cerulean" in r.text.lower() for r in results)
-            print(f"    ✓ retrieved {len(results)} results, "
-                  f"contains-answer={'yes' if found else 'NO'}")
+            print(
+                f"    ✓ retrieved {len(results)} results, "
+                f"contains-answer={'yes' if found else 'NO'}"
+            )
             if not found and agent_id:
                 # Debug: list all memories for this agent
                 try:
                     all_mem = self._retry(self._client.recall, agent_id, "", limit=20)
-                    print(f"    debug: agent has {len(all_mem.get('memories',[]))} memories")
+                    print(
+                        f"    debug: agent has {len(all_mem.get('memories', []))} memories"
+                    )
                 except Exception:
                     pass
                 return False

@@ -36,6 +36,7 @@ class LettaAdapter(MemorySystem):
         self._maybe_init_db()
 
         from letta_client import Letta
+
         self._client = Letta(
             base_url=self.base_url,
             environment="local",
@@ -52,6 +53,7 @@ class LettaAdapter(MemorySystem):
         """
         import asyncio
         import os
+
         db_path = os.path.expanduser("~/.letta/letta.db")
         if os.path.exists(db_path):
             return  # db already initialized
@@ -61,6 +63,7 @@ class LettaAdapter(MemorySystem):
 
             # Import the ORM base and engine (same as the server)
             from letta.settings import settings
+
             # Force settings evaluation to pick up LETTA_DB_DIR
             _ = settings.database_engine
 
@@ -83,11 +86,13 @@ class LettaAdapter(MemorySystem):
             agent_id = f"bench-{namespace}-{uuid.uuid4().hex[:8]}"
             self._client.agents.create(
                 name=agent_id,
-                memory_blocks=[{
-                    "label": "human",
-                    "value": f"Benchmark user {namespace}",
-                    "limit": 2000,
-                }],
+                memory_blocks=[
+                    {
+                        "label": "human",
+                        "value": f"Benchmark user {namespace}",
+                        "limit": 2000,
+                    }
+                ],
             )
             self._agent_ids[namespace] = agent_id
 
@@ -121,10 +126,14 @@ class LettaAdapter(MemorySystem):
             dia_match = re.search(r"\[dia_id=([^\]]+)\]", text)
             dia_id = dia_match.group(1) if dia_match else ""
             clean = re.sub(r"\[dia_id=[^\]]*\]\s*", "", text)
-            items.append(RetrievedItem(
-                dia_id=dia_id, session_id="",
-                text=clean, score=getattr(p, "score", 0.0),
-            ))
+            items.append(
+                RetrievedItem(
+                    dia_id=dia_id,
+                    session_id="",
+                    text=clean,
+                    score=getattr(p, "score", 0.0),
+                )
+            )
         return items
 
     def teardown(self) -> None:
@@ -138,6 +147,7 @@ class LettaAdapter(MemorySystem):
     def cleanup(self) -> None:
         import shutil
         from pathlib import Path
+
         for p in [Path.home() / ".letta"]:
             if p.exists():
                 shutil.rmtree(p, ignore_errors=True)
@@ -153,7 +163,8 @@ class LettaAdapter(MemorySystem):
         print(f"  [dry-run] checking {self.base_url} …")
         ns = f"dry-{uuid.uuid4().hex[:6]}"
         test_turn = DialogueTurn(
-            dia_id="DRY:1", speaker="tester",
+            dia_id="DRY:1",
+            speaker="tester",
             text="The sky is cerulean today.",
             session_id="dry-session",
         )
@@ -169,8 +180,10 @@ class LettaAdapter(MemorySystem):
             print("  [dry-run] search …")
             results = self.search("What color is the sky?", ns, k=3)
             found = any("cerulean" in r.text.lower() for r in results)
-            print(f"    ✓ retrieved {len(results)} results, "
-                  f"contains-answer={'yes' if found else 'NO'}")
+            print(
+                f"    ✓ retrieved {len(results)} results, "
+                f"contains-answer={'yes' if found else 'NO'}"
+            )
             if not found:
                 return False
 

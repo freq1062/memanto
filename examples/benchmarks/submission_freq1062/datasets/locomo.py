@@ -40,8 +40,11 @@ LONGMEMEVAL_FILES = {
 
 CACHE_DIR = Path.home() / ".cache" / "memanto-benchmark"
 CATEGORY_NAMES = {
-    1: "factual", 2: "temporal", 3: "inferential",
-    4: "multi-hop", 5: "adversarial",
+    1: "factual",
+    2: "temporal",
+    3: "inferential",
+    4: "multi-hop",
+    5: "adversarial",
 }
 LONGMEMEVAL_CATEGORIES = {
     "single-session-user": "single-session-user",
@@ -95,14 +98,15 @@ class LoCoMoDataset(Dataset):
 
     # ---- LoCoMo -----------------------------------------------------------
 
-    def _load_locomo(self, limit: int | None, max_turns_per_conv: int | None = None) -> BenchmarkDataset:
+    def _load_locomo(
+        self, limit: int | None, max_turns_per_conv: int | None = None
+    ) -> BenchmarkDataset:
         path = _cached_download(LOCOMO_URL, "locomo10.json")
         with open(path) as f:
             raw = json.load(f)
 
         conversations = [
-            self._parse_locomo_conv(c)
-            for c in (raw[:limit] if limit else raw)
+            self._parse_locomo_conv(c) for c in (raw[:limit] if limit else raw)
         ]
         return BenchmarkDataset(
             name=self.name,
@@ -110,7 +114,9 @@ class LoCoMoDataset(Dataset):
             description=self.description,
         )
 
-    def _parse_locomo_conv(self, raw: dict, max_turns: int | None = None) -> Conversation:
+    def _parse_locomo_conv(
+        self, raw: dict, max_turns: int | None = None
+    ) -> Conversation:
         sample_id = raw.get("sample_id", "unknown")
         conv_data = raw.get("conversation", {})
 
@@ -123,12 +129,14 @@ class LoCoMoDataset(Dataset):
         for sn in snums:
             sk = f"session_{sn}"
             for t in conv_data.get(sk, []):
-                turns.append(DialogueTurn(
-                    dia_id=t.get("dia_id", f"D{sn}:{len(turns)+1}"),
-                    speaker=t.get("speaker", "unknown"),
-                    text=t.get("text", ""),
-                    session_id=sk,
-                ))
+                turns.append(
+                    DialogueTurn(
+                        dia_id=t.get("dia_id", f"D{sn}:{len(turns) + 1}"),
+                        speaker=t.get("speaker", "unknown"),
+                        text=t.get("text", ""),
+                        session_id=sk,
+                    )
+                )
 
         if max_turns:
             turns = turns[:max_turns]
@@ -139,23 +147,29 @@ class LoCoMoDataset(Dataset):
             for ev in qa_raw.get("evidence", []):
                 parts = ev.split(":")
                 snum = parts[0][1:] if parts[0].startswith("D") else parts[0]
-                evidence.append(EvidenceSpan(
-                    session_id=f"session_{snum}",
-                    turn_ids=[ev],
-                ))
-            qa_pairs.append(QAPair(
-                question=qa_raw.get("question", ""),
-                answer=qa_raw.get("answer", ""),
-                category=CATEGORY_NAMES.get(qa_raw.get("category", 0), "unknown"),
-                category_id=qa_raw.get("category", 0),
-                evidence=evidence,
-            ))
+                evidence.append(
+                    EvidenceSpan(
+                        session_id=f"session_{snum}",
+                        turn_ids=[ev],
+                    )
+                )
+            qa_pairs.append(
+                QAPair(
+                    question=qa_raw.get("question", ""),
+                    answer=qa_raw.get("answer", ""),
+                    category=CATEGORY_NAMES.get(qa_raw.get("category", 0), "unknown"),
+                    category_id=qa_raw.get("category", 0),
+                    evidence=evidence,
+                )
+            )
         return Conversation(sample_id=sample_id, turns=turns, qa_pairs=qa_pairs)
 
     # ---- LongMemEval -------------------------------------------------------
 
     def _load_longmemeval(
-        self, split: str, limit: int | None,
+        self,
+        split: str,
+        limit: int | None,
         max_turns_per_conv: int | None = None,
     ) -> BenchmarkDataset:
         url = LONGMEMEVAL_URL + LONGMEMEVAL_FILES[split]
@@ -164,14 +178,13 @@ class LoCoMoDataset(Dataset):
             raw = json.load(f)
 
         conversations = [
-            self._parse_lme_item(item)
-            for item in (raw[:limit] if limit else raw)
+            self._parse_lme_item(item) for item in (raw[:limit] if limit else raw)
         ]
         return BenchmarkDataset(
             name=f"LongMemEval-{split}",
             conversations=conversations,
             description=f"LongMemEval {split} — "
-                        f"{len(raw)} questions, session-level evidence.",
+            f"{len(raw)} questions, session-level evidence.",
         )
 
     def _parse_lme_item(self, item: dict) -> Conversation:
@@ -185,12 +198,14 @@ class LoCoMoDataset(Dataset):
             strict=True,
         ):
             for ti, msg in enumerate(sess):
-                turns.append(DialogueTurn(
-                    dia_id=f"{sid}_{ti}",
-                    speaker=msg.get("role", "unknown"),
-                    text=msg.get("content", ""),
-                    session_id=sid,
-                ))
+                turns.append(
+                    DialogueTurn(
+                        dia_id=f"{sid}_{ti}",
+                        speaker=msg.get("role", "unknown"),
+                        text=msg.get("content", ""),
+                        session_id=sid,
+                    )
+                )
 
         evidence = [EvidenceSpan(session_id=s, turn_ids=[]) for s in answer_sids]
         qa = QAPair(
@@ -212,7 +227,7 @@ class LoCoMoDataset(Dataset):
         k: int = 10,
         judge_fn: callable | None = None,
     ) -> tuple[float, float, bool, int, dict]:
-        return (* _default_compute_scores(retrieved, qa, k), {})
+        return (*_default_compute_scores(retrieved, qa, k), {})
 
     # ---- Dry-run -----------------------------------------------------------
 
@@ -220,8 +235,10 @@ class LoCoMoDataset(Dataset):
         print("  [dry-run] loading 1 conversation …")
         try:
             ds = self.load(limit=1)
-            print(f"    ✓  {len(ds.conversations)} conv, "
-                  f"{ds.total_turns} turns, {ds.total_qa_pairs} QA")
+            print(
+                f"    ✓  {len(ds.conversations)} conv, "
+                f"{ds.total_turns} turns, {ds.total_qa_pairs} QA"
+            )
         except Exception as e:
             print(f"    ✗  load failed: {e}")
             return False

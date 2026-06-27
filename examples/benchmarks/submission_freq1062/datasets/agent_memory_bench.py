@@ -43,7 +43,9 @@ class AgentMemoryBenchDataset(Dataset):
     # ------------------------------------------------------------------
 
     def load(
-        self, limit: int | None = None, **kwargs,
+        self,
+        limit: int | None = None,
+        **kwargs,
     ) -> BenchmarkDataset:
         conv_path = self._cached("data/conversation.json")
         qa_path = self._cached("eval/questions.json")
@@ -70,17 +72,21 @@ class AgentMemoryBenchDataset(Dataset):
         return dest
 
     def _build_conversation(
-        self, raw_conv: list[dict], raw_qs: list[dict],
+        self,
+        raw_conv: list[dict],
+        raw_qs: list[dict],
     ) -> Conversation:
         # Build turns
         turns: list[DialogueTurn] = []
         for t in raw_conv:
-            turns.append(DialogueTurn(
-                dia_id=str(t["turn"]),
-                speaker=t["role"],
-                text=t["content"],
-                session_id="session_1",
-            ))
+            turns.append(
+                DialogueTurn(
+                    dia_id=str(t["turn"]),
+                    speaker=t["role"],
+                    text=t["content"],
+                    session_id="session_1",
+                )
+            )
 
         # Build hidden_facts lookup: turn_num → set of facts
         fact_by_turn: dict[int, list[str]] = {}
@@ -112,14 +118,16 @@ class AgentMemoryBenchDataset(Dataset):
                 for tid in evidence_turns
             ]
 
-            qa_pairs.append(QAPair(
-                question=question,
-                answer=gt,
-                category="factual",
-                category_id="factual",
-                evidence=evidence,
-                question_id=qid,
-            ))
+            qa_pairs.append(
+                QAPair(
+                    question=question,
+                    answer=gt,
+                    category="factual",
+                    category_id="factual",
+                    evidence=evidence,
+                    question_id=qid,
+                )
+            )
 
         return Conversation(
             sample_id="amb_1",
@@ -134,7 +142,8 @@ class AgentMemoryBenchDataset(Dataset):
         a_clean = answer.lower().strip().rstrip(".")
         f_clean = fact.lower().strip()
         return a_clean in f_clean or any(
-            word in f_clean for word in a_clean.split()
+            word in f_clean
+            for word in a_clean.split()
             if len(word) > 2  # skip very short words
         )
 
@@ -168,8 +177,10 @@ class AgentMemoryBenchDataset(Dataset):
             return False
 
         conv = ds.conversations[0]
-        print(f"    ✓  {len(conv.turns)} turns, {len(conv.qa_pairs)} QA, "
-              f"{sum(1 for t in conv.turns if 'filler' not in (t.text or '').lower())} info turns")
+        print(
+            f"    ✓  {len(conv.turns)} turns, {len(conv.qa_pairs)} QA, "
+            f"{sum(1 for t in conv.turns if 'filler' not in (t.text or '').lower())} info turns"
+        )
 
         if not conv.qa_pairs:
             print("    ✗  no QA pairs")
@@ -186,7 +197,8 @@ class AgentMemoryBenchDataset(Dataset):
             RetrievedItem(
                 dia_id=tid,
                 session_id=qa.evidence[0].session_id,
-                text="ok", score=1.0,
+                text="ok",
+                score=1.0,
             )
             for ev in qa.evidence
             for tid in ev.turn_ids

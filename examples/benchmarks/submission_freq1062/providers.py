@@ -84,9 +84,13 @@ class KeyRing:
         self.idx = (self.idx + 1) % len(self.keys)
         remaining = len(self.keys) - len(self.exhausted)
         if remaining <= 0:
-            print(f"    ⚠ All {self.service} API keys exhausted ({len(self.keys)} keys)")
+            print(
+                f"    ⚠ All {self.service} API keys exhausted ({len(self.keys)} keys)"
+            )
             return False
-        print(f"    ⚠ {self.service} key exhausted, rotating to next ({remaining} left)")
+        print(
+            f"    ⚠ {self.service} key exhausted, rotating to next ({remaining} left)"
+        )
         return True
 
 
@@ -161,11 +165,14 @@ def groq_judge(
     api_key: str = "",
 ) -> bool:
     """Ask Groq whether the expected answer appears in the retrieved chunks."""
-    chunks = "\n\n".join(
-        f"[{i+1}] {t[:600]}"
-        for i, t in enumerate(retrieved_texts[:10])
-        if t.strip()
-    ) or "(nothing retrieved)"
+    chunks = (
+        "\n\n".join(
+            f"[{i + 1}] {t[:600]}"
+            for i, t in enumerate(retrieved_texts[:10])
+            if t.strip()
+        )
+        or "(nothing retrieved)"
+    )
 
     prompt = (
         f"Given this text from a knowledge base:\n\n{chunks}\n\n"
@@ -197,8 +204,10 @@ def gemini_embed(
     model: str = GEMINI_DEFAULT_EMBED_MODEL,
     api_key: str = "",
     task_type: Literal[
-        "RETRIEVAL_DOCUMENT", "RETRIEVAL_QUERY",
-        "SEMANTIC_SIMILARITY", "CLASSIFICATION",
+        "RETRIEVAL_DOCUMENT",
+        "RETRIEVAL_QUERY",
+        "SEMANTIC_SIMILARITY",
+        "CLASSIFICATION",
     ] = "RETRIEVAL_DOCUMENT",
 ) -> list[float] | list[list[float]]:
     """Embed one or more strings via Gemini with automatic key rotation."""
@@ -276,7 +285,9 @@ def local_embed(
     resp.raise_for_status()
     data = resp.json()
 
-    embeddings = [e["embedding"] for e in sorted(data.get("data", []), key=lambda x: x["index"])]
+    embeddings = [
+        e["embedding"] for e in sorted(data.get("data", []), key=lambda x: x["index"])
+    ]
     return embeddings[0] if single else embeddings
 
 

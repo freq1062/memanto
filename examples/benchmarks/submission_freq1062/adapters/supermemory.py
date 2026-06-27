@@ -62,9 +62,7 @@ class SupermemoryAdapter(MemorySystem):
 
             time.sleep(0.05)
 
-    def search(
-        self, query: str, namespace: str, k: int = 10
-    ) -> list[RetrievedItem]:
+    def search(self, query: str, namespace: str, k: int = 10) -> list[RetrievedItem]:
         tag = self._container_tags.get(namespace)
         if not tag:
             return []
@@ -77,7 +75,7 @@ class SupermemoryAdapter(MemorySystem):
                     container_tags=[tag],
                     limit=k,
                 )
-                raw = list(resp.results or []) if hasattr(resp, 'results') else []
+                raw = list(resp.results or []) if hasattr(resp, "results") else []
             except Exception as e:
                 print(f"    Supermemory search error: {e}")
                 return []
@@ -85,26 +83,30 @@ class SupermemoryAdapter(MemorySystem):
             items = []
             for mem in raw[:k]:
                 # Extract text from chunks (ResultChunk objects have .content)
-                chunks = getattr(mem, 'chunks', None) or []
+                chunks = getattr(mem, "chunks", None) or []
                 if isinstance(chunks, list) and chunks:
-                    if hasattr(chunks[0], 'content'):
-                        text = ' '.join(c.content for c in chunks)
-                    elif hasattr(chunks[0], 'text'):
-                        text = ' '.join(c.text for c in chunks)
+                    if hasattr(chunks[0], "content"):
+                        text = " ".join(c.content for c in chunks)
+                    elif hasattr(chunks[0], "text"):
+                        text = " ".join(c.text for c in chunks)
                     else:
-                        text = ' '.join(str(c) for c in chunks)
+                        text = " ".join(str(c) for c in chunks)
                 else:
-                    text = getattr(mem, 'memory', '') or str(mem)
+                    text = getattr(mem, "memory", "") or str(mem)
 
                 dia_match = re.search(r"\[dia_id=([^\]]+)\]", text)
                 ses_match = re.search(r"\[session=([^\]]+)\]", text)
                 dia_id = dia_match.group(1) if dia_match else ""
                 session = ses_match.group(1) if ses_match else ""
                 clean = re.sub(r"\[(dia_id|session)=[^\]]*\]\s*", "", text)
-                items.append(RetrievedItem(
-                    dia_id=dia_id, session_id=session,
-                    text=clean, score=getattr(mem, 'similarity', 0.0) or 0.0,
-                ))
+                items.append(
+                    RetrievedItem(
+                        dia_id=dia_id,
+                        session_id=session,
+                        text=clean,
+                        score=getattr(mem, "similarity", 0.0) or 0.0,
+                    )
+                )
 
             if items:
                 return items
@@ -118,8 +120,10 @@ class SupermemoryAdapter(MemorySystem):
     def cleanup(self) -> None:
         """Delete all documents from Supermemory."""
         import os
+
         try:
             from supermemory import Supermemory
+
             api_key = os.environ.get("SUPERMEMORY_API_KEY", "")
             if not api_key:
                 print("    supermemory cleanup: SUPERMEMORY_API_KEY not set")
@@ -128,8 +132,11 @@ class SupermemoryAdapter(MemorySystem):
             total = 0
             while True:
                 resp = cli.documents.list()
-                mems = resp.memories if hasattr(resp, "memories") \
-                       else (resp.results if hasattr(resp, "results") else [])
+                mems = (
+                    resp.memories
+                    if hasattr(resp, "memories")
+                    else (resp.results if hasattr(resp, "results") else [])
+                )
                 if not mems:
                     break
                 ids = [m.id for m in mems if hasattr(m, "id")]

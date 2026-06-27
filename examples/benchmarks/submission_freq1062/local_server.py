@@ -28,6 +28,7 @@ def _get_llm():
     global _llm
     if _llm is None:
         from llama_cpp import Llama
+
         _llm = Llama(
             model_path=MODEL_PATH,
             n_ctx=16384,
@@ -41,11 +42,14 @@ def _get_embed_model():
     global _embed_model
     if _embed_model is None:
         from sentence_transformers import SentenceTransformer
+
         _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
     return _embed_model
 
 
-def local_chat(messages: list[dict], temperature: float = 0.0, max_tokens: int = 2048) -> str:
+def local_chat(
+    messages: list[dict], temperature: float = 0.0, max_tokens: int = 2048
+) -> str:
     """Chat via llama-cpp-python's built-in chat handler (uses model's native template)."""
     llm = _get_llm()
     response = llm.create_chat_completion(
@@ -68,8 +72,8 @@ def local_embed(text: str | list[str]) -> list[float] | list[list[float]]:
 # HTTP server
 # ---------------------------------------------------------------------------
 
-class OpenAIHandler(BaseHTTPRequestHandler):
 
+class OpenAIHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass  # silence logs
 
@@ -97,11 +101,17 @@ class OpenAIHandler(BaseHTTPRequestHandler):
             max_tokens = body.get("max_tokens", 2048)
 
             try:
-                response = local_chat(messages, temperature=temperature, max_tokens=max_tokens)
-                self._send_json({
-                    "choices": [{"message": {"role": "assistant", "content": response}}],
-                    "usage": {"total_tokens": len(response.split())},
-                })
+                response = local_chat(
+                    messages, temperature=temperature, max_tokens=max_tokens
+                )
+                self._send_json(
+                    {
+                        "choices": [
+                            {"message": {"role": "assistant", "content": response}}
+                        ],
+                        "usage": {"total_tokens": len(response.split())},
+                    }
+                )
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)
 
@@ -112,11 +122,13 @@ class OpenAIHandler(BaseHTTPRequestHandler):
                 if isinstance(inp, str):
                     embeddings = [embeddings]
                 data = [{"embedding": e, "index": i} for i, e in enumerate(embeddings)]
-                self._send_json({
-                    "object": "list",
-                    "data": data,
-                    "model": "all-MiniLM-L6-v2",
-                })
+                self._send_json(
+                    {
+                        "object": "list",
+                        "data": data,
+                        "model": "all-MiniLM-L6-v2",
+                    }
+                )
             except Exception as e:
                 self._send_json({"error": str(e)}, 500)
 

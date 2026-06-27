@@ -19,7 +19,6 @@ from interfaces import DialogueTurn, MemorySystem, RetrievedItem
 
 
 class CogneeAdapter(MemorySystem):
-
     def __init__(
         self,
         llm_provider: str = "openai",
@@ -62,6 +61,7 @@ class CogneeAdapter(MemorySystem):
 
         if loop.is_running():
             import threading
+
             result: list = []
             error: list = []
 
@@ -110,6 +110,7 @@ class CogneeAdapter(MemorySystem):
     def teardown(self) -> None:
         try:
             import cognee
+
             self._run_async(cognee.forget())
         except Exception:
             pass
@@ -118,6 +119,7 @@ class CogneeAdapter(MemorySystem):
     def cleanup(self) -> None:
         import shutil
         from pathlib import Path
+
         for p in [Path.home() / ".cognee"]:
             if p.exists():
                 shutil.rmtree(p, ignore_errors=True)
@@ -144,16 +146,18 @@ class CogneeAdapter(MemorySystem):
             batch = texts[i : i + 3]
             for attempt in range(self.max_retries + 1):
                 try:
-                    self._run_async(cognee.remember(
-                        data=batch,
-                        dataset_name=namespace,
-                        session_id=sid,
-                    ))
+                    self._run_async(
+                        cognee.remember(
+                            data=batch,
+                            dataset_name=namespace,
+                            session_id=sid,
+                        )
+                    )
                     break
                 except Exception as e:
                     err = str(e)
                     if "429" in err:
-                        time.sleep((2 ** attempt) * 3)
+                        time.sleep((2**attempt) * 3)
                     elif attempt < self.max_retries:
                         time.sleep(1)
                     else:
@@ -162,29 +166,38 @@ class CogneeAdapter(MemorySystem):
             time.sleep(self.pacing)
 
     def search(
-        self, query: str, namespace: str, k: int = 10,
+        self,
+        query: str,
+        namespace: str,
+        k: int = 10,
     ) -> list[RetrievedItem]:
         import cognee
+
         sid = self._session_ids.get(namespace)
 
         try:
-            results = self._run_async(cognee.recall(
-                query_text=query,
-                top_k=k,
-                session_id=sid,
-                only_context=True,
-            ))
-        except Exception as e:
-            if "Could not automatically map" in str(e):
-                # Cognee needs tiktoken; force it
-                import tiktoken
-                tiktoken.get_encoding("cl100k_base")
-                results = self._run_async(cognee.recall(
+            results = self._run_async(
+                cognee.recall(
                     query_text=query,
                     top_k=k,
                     session_id=sid,
                     only_context=True,
-                ))
+                )
+            )
+        except Exception as e:
+            if "Could not automatically map" in str(e):
+                # Cognee needs tiktoken; force it
+                import tiktoken
+
+                tiktoken.get_encoding("cl100k_base")
+                results = self._run_async(
+                    cognee.recall(
+                        query_text=query,
+                        top_k=k,
+                        session_id=sid,
+                        only_context=True,
+                    )
+                )
             else:
                 print(f"    cognee recall error: {e}")
                 return []
@@ -195,12 +208,14 @@ class CogneeAdapter(MemorySystem):
             dia = re.search(r"\[dia_id=([^\]]+)\]", text)
             ses = re.search(r"\[session=([^\]]+)\]", text)
             clean = re.sub(r"\[(dia_id|session)=[^\]]*\]\s*", "", text)
-            items.append(RetrievedItem(
-                dia_id=dia.group(1) if dia else "",
-                session_id=ses.group(1) if ses else "",
-                text=clean,
-                score=getattr(r, "score", 0.0),
-            ))
+            items.append(
+                RetrievedItem(
+                    dia_id=dia.group(1) if dia else "",
+                    session_id=ses.group(1) if ses else "",
+                    text=clean,
+                    score=getattr(r, "score", 0.0),
+                )
+            )
         return items
 
     # ------------------------------------------------------------------
@@ -211,6 +226,7 @@ class CogneeAdapter(MemorySystem):
         """Verify the adapter works with the local API server."""
         # Check local server is reachable
         import urllib.request
+
         try:
             urllib.request.urlopen("http://127.0.0.1:8080/health", timeout=2)
         except Exception:
@@ -220,7 +236,8 @@ class CogneeAdapter(MemorySystem):
 
         ns = f"dry-{uuid.uuid4().hex[:6]}"
         test_turn = DialogueTurn(
-            dia_id="DRY:1", speaker="tester",
+            dia_id="DRY:1",
+            speaker="tester",
             text="The sky is cerulean today.",
             session_id="dry-session",
         )
@@ -237,8 +254,10 @@ class CogneeAdapter(MemorySystem):
             print("  [dry-run] search …")
             results = self.search("What color is the sky?", ns, k=3)
             found = any("cerulean" in r.text.lower() for r in results)
-            print(f"    ✓ retrieved {len(results)} results, "
-                  f"contains-answer={'yes' if found else 'NO'}")
+            print(
+                f"    ✓ retrieved {len(results)} results, "
+                f"contains-answer={'yes' if found else 'NO'}"
+            )
             if not found:
                 return False
 
