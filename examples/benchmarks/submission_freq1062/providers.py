@@ -10,17 +10,11 @@ Checkpointing ensures progress is saved if all keys exhaust their quotas.
 
 from __future__ import annotations
 
+from typing import Literal
 import json
 import os
 import time
 import urllib.request
-from typing import Literal
-
-
-# ---------------------------------------------------------------------------
-# Key rotation
-# ---------------------------------------------------------------------------
-
 class KeyRing:
     """Manages multiple API keys, rotating on rate limits.
 

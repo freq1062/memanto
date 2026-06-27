@@ -8,18 +8,16 @@
 
 from __future__ import annotations
 
-import argparse
+from datetime import datetime
 import json
 import os
 import sys
 import warnings
-from datetime import datetime
 
+import argparse
 warnings.filterwarnings("ignore")
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from examples.benchmarks.submission_freq1062.interfaces import (
+from interfaces import (
     BenchmarkDataset,
     Dataset,
     MemorySystem,

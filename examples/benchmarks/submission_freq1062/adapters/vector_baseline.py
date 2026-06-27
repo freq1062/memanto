@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import time
 import uuid
+
 import numpy as np
+
 from interfaces import DialogueTurn, RetrievedItem, MemorySystem
-
-
 class VectorBaselineAdapter(MemorySystem):
     """In-memory vector store using cluster embeddings + cosine similarity.
 

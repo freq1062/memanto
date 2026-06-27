@@ -14,12 +14,11 @@ API (letta_client v1.12+):
 
 from __future__ import annotations
 
-import uuid
 import re
+import uuid
+
 from interfaces import DialogueTurn
 from interfaces import RetrievedItem, MemorySystem
-
-
 class LettaAdapter(MemorySystem):
     _required_env: list[str] = []
 

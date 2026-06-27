@@ -11,8 +11,6 @@ import uuid
 
 from interfaces import DialogueTurn
 from interfaces import RetrievedItem, MemorySystem
-
-
 class MemantoAdapter(MemorySystem):
 
     def __init__(

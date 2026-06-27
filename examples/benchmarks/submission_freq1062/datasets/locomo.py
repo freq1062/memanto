@@ -7,10 +7,10 @@ turns.  Scoring is deterministic — no LLM judge needed.
 
 from __future__ import annotations
 
-import json
-import urllib.request
 from pathlib import Path
 from typing import Literal
+import json
+import urllib.request
 
 from interfaces import (
     _default_compute_scores,

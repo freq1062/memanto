@@ -14,10 +14,9 @@ from __future__ import annotations
 import re
 import time
 import uuid
+
 from interfaces import DialogueTurn
 from interfaces import RetrievedItem, MemorySystem
-
-
 class SupermemoryAdapter(MemorySystem):
     _required_env: list[str] = ["SUPERMEMORY_API_KEY"]
 

@@ -11,15 +11,9 @@ Start with:
 
 from __future__ import annotations
 
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
-
-# ---------------------------------------------------------------------------
-# Providers (inline to keep server self-contained)
-# ---------------------------------------------------------------------------
-
 _llm = None
 _embed_model = None
 
