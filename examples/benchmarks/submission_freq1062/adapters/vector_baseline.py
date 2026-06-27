@@ -40,7 +40,7 @@ class VectorBaselineAdapter(MemorySystem):
     # ------------------------------------------------------------------
 
     def store_turns(self, turns: list[DialogueTurn], namespace: str) -> None:
-        from providers import cluster_embed
+        from providers import local_embed
 
         if namespace not in self._stores:
             self._stores[namespace] = ([], [])
@@ -52,7 +52,7 @@ class VectorBaselineAdapter(MemorySystem):
         for i in range(0, len(turns), batch_size):
             batch = turns[i : i + batch_size]
             texts = [t.text for t in batch]
-            embs = cluster_embed(texts)
+            embs = local_embed(texts)
             if isinstance(embs, list) and len(embs) == len(batch):
                 for t, e in zip(batch, embs):
                     turn_list.append(t)
@@ -63,7 +63,7 @@ class VectorBaselineAdapter(MemorySystem):
     def search(
         self, query: str, namespace: str, k: int = 10,
     ) -> list[RetrievedItem]:
-        from providers import cluster_embed
+        from providers import local_embed
 
         if namespace not in self._stores:
             return []
@@ -73,7 +73,7 @@ class VectorBaselineAdapter(MemorySystem):
             return []
 
         query_emb = np.array(
-            cluster_embed(query),
+            local_embed(query),
             dtype=np.float32,
         )
 
@@ -100,7 +100,7 @@ class VectorBaselineAdapter(MemorySystem):
     # ------------------------------------------------------------------
 
     def dry_run(self) -> bool:
-        from providers import check_keys, cluster_embed
+        from providers import check_keys, local_embed
         if not check_keys("CLUSTER_API_KEY"):
             pass
 

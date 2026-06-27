@@ -256,110 +256,37 @@ def gemini_embed(
 # ---------------------------------------------------------------------------
 # Cluster — user's private ML endpoint (no rate limits)
 # ---------------------------------------------------------------------------
+# Local embedding — calls the local API server (localhost:8080)
+# ---------------------------------------------------------------------------
 
-CLUSTER_BASE = "https://ml.nrjrkoniw.win/v1"
-CLUSTER_API_KEY = ""  # loaded lazily
-
-
-def _cluster_key() -> str:
-    global CLUSTER_API_KEY
-    if not CLUSTER_API_KEY:
-        CLUSTER_API_KEY = os.environ.get(
-            "CLUSTER_API_KEY",
-            "aa7bad0e4b9d650088e5d28ab822135472a50cdb22f12db03829c64051e6668b",
-        )
-    return CLUSTER_API_KEY
+LOCAL_BASE = "http://127.0.0.1:8080/v1"
 
 
-def cluster_embed(
+def local_embed(
     text: str | list[str],
-    api_key: str = "",
 ) -> list[float] | list[list[float]]:
-    """Embed text via the cluster's all-MiniLM-L6-v2 endpoint."""
+    """Embed text via the local API server's all-MiniLM-L6-v2 endpoint."""
     import requests as _req
 
-    key = api_key or _cluster_key()
     single = isinstance(text, str)
     payload = {"input": [text] if single else text}
 
     resp = _req.post(
-        f"{CLUSTER_BASE}/embed",
-        headers={
-            "Content-Type": "application/json",
-            "X-API-Key": key,
-            "User-Agent": "MemantoBench/1.0",
-        },
+        f"{LOCAL_BASE}/embeddings",
+        headers={"Content-Type": "application/json", "User-Agent": "MemantoBench/1.0"},
         json=payload,
         timeout=60,
     )
     resp.raise_for_status()
     data = resp.json()
 
-    embeddings = data.get("embeddings", [])
+    embeddings = [e["embedding"] for e in sorted(data.get("data", []), key=lambda x: x["index"])]
     return embeddings[0] if single else embeddings
 
 
-def cluster_chat(
-    messages: list[dict],
-    model: str = "qwen2.5:1.5b",
-    api_key: str = "",
-    temperature: float = 0.0,
-    max_tokens: int = 2048,
-) -> str:
-    """Chat via the cluster's Ollama-compatible endpoint."""
-    import requests as _req
-
-    key = api_key or _cluster_key()
-
-    resp = _req.post(
-        f"{CLUSTER_BASE}/chat",
-        headers={
-            "Content-Type": "application/json",
-            "X-API-Key": key,
-            "User-Agent": "MemantoBench/1.0",
-        },
-        json={
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        },
-        timeout=120,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-
-    return data.get("message", {}).get("content", "").strip()
-
-
-def cluster_judge(
-    question: str,
-    expected: str,
-    retrieved_texts: list[str],
-    model: str = "qwen2.5:1.5b",
-) -> bool:
-    """Judge via cluster — no rate limits, always available."""
-    chunks = "\n\n".join(
-        f"[{i+1}] {t[:600]}"
-        for i, t in enumerate(retrieved_texts[:10])
-        if t.strip()
-    ) or "(nothing retrieved)"
-
-    prompt = (
-        f"Given this text from a knowledge base:\n\n{chunks}\n\n"
-        f"Question: {question}\n"
-        f"Expected answer: {expected}\n\n"
-        f"Does the text contain the expected answer (verbatim or implied)? "
-        f"Reply with exactly one word: YES or NO."
-    )
-
-    answer = cluster_chat(
-        messages=[{"role": "user", "content": prompt}],
-        model=model,
-        temperature=0.0,
-        max_tokens=5,
-    )
-    return "YES" in answer.upper()
+# ---------------------------------------------------------------------------
+# Cluster (legacy — not used, replaced by local API server)
+# ---------------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------

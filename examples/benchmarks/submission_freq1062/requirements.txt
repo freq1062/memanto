@@ -3,7 +3,7 @@ tqdm>=4.0
 numpy>=1.24
 
 # --- Datasets ---
-pyarrow>=14.0            # MemoryAgentBench (parquet)
+pyarrow>=14.0.1            # MemoryAgentBench (parquet)
 
 # --- Adapters (install the ones you need) ---
 
