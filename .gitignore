@@ -104,3 +104,6 @@ temp/
 
 # Generated version file
 **/_version.py
+*_ckpt.json
+results_*.json
+run_*.log
