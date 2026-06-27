@@ -96,7 +96,7 @@ def run_benchmark(
     print(f"{'='*60}")
 
     a = adapter_cls(**(adapter_kwargs or {}))
-    results = SystemResults(system_name=a.name(), dataset_name=dataset.name)
+    results = SystemResults(system_name=a.name(), dataset_name=dataset.name, configured_k=k)
 
     # Checkpoint file: {adapter}_{dataset}_ckpt.json
     ckpt_path = f"{a.name()}_{dataset.name}_ckpt.json"

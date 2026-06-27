@@ -52,28 +52,14 @@ def _get_embed_model():
 
 
 def local_chat(messages: list[dict], temperature: float = 0.0, max_tokens: int = 2048) -> str:
+    """Chat via llama-cpp-python's built-in chat handler (uses model's native template)."""
     llm = _get_llm()
-    prompt_parts = []
-    for m in messages:
-        role = m.get("role", "user")
-        content = m.get("content", "")
-        if role == "system":
-            prompt_parts.append(f"<|system|>\n{content}")
-        elif role == "user":
-            prompt_parts.append(f"<|user|>\n{content}")
-        elif role == "assistant":
-            prompt_parts.append(f"<|assistant|>\n{content}")
-    prompt_parts.append("<|assistant|>\n")
-    prompt = "\n".join(prompt_parts)
-
-    response = llm(
-        prompt,
+    response = llm.create_chat_completion(
+        messages=messages,
         max_tokens=max_tokens,
         temperature=temperature,
-        stop=["<|user|>", "<|system|>", "<|end|>"],
-        echo=False,
     )
-    return (response["choices"][0]["text"] or "").strip()
+    return (response["choices"][0]["message"]["content"] or "").strip()
 
 
 def local_embed(text: str | list[str]) -> list[float] | list[list[float]]:

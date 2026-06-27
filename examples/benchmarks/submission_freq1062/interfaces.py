@@ -121,6 +121,7 @@ class SystemResults:
 
     # k values to report recall at
     k_curve: tuple[int, ...] = (5, 10, 20, 30, 40, 50)
+    configured_k: int = 50
 
     @property
     def total_queries(self) -> int:
@@ -131,9 +132,11 @@ class SystemResults:
         return sum(q.token_count for q in self.queries)
 
     def recall_curve(self) -> dict[int, float]:
-        """Compute recall at each k value across all queries."""
+        """Compute recall at each k value up to configured_k."""
         result = {}
         for k in self.k_curve:
+            if k > self.configured_k:
+                continue
             hits = 0
             for q in self.queries:
                 retrieved_ids = {r.dia_id for r in q.retrieved[:k]}
@@ -278,11 +281,13 @@ def _default_compute_scores(
 
     has_stale = False
     stale_count = 0
-    if len({r.session_id for r in top_k}) > 1 and qa.category in (
-        "knowledge-update", "temporal", "multi-session",
-    ):
-        has_stale = True
-        stale_count = len(top_k) - (1 if recall > 0 else 0)
+    if qa.category in ("knowledge-update", "temporal", "multi-session"):
+        evidence_session_ids = {ev.session_id for ev in qa.evidence}
+        if evidence_turn_ids:
+            stale_count = sum(1 for r in top_k if r.dia_id not in evidence_turn_ids)
+        else:
+            stale_count = sum(1 for r in top_k if r.session_id not in evidence_session_ids)
+        has_stale = stale_count > 0
 
     return recall, precision, has_stale, stale_count
 
