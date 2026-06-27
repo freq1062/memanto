@@ -11,7 +11,6 @@ answer text.  This gives deterministic turn-level evidence like LoCoMo.
 from __future__ import annotations
 
 import json
-import os
 import urllib.request
 from pathlib import Path
 

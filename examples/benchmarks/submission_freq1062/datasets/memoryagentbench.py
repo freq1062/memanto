@@ -12,7 +12,6 @@ Splits:
 from __future__ import annotations
 
 import os
-import time
 import urllib.request
 from pathlib import Path
 from typing import Literal

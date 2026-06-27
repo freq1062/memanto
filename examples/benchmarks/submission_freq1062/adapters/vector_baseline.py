@@ -6,7 +6,6 @@ cosine similarity.  Serves as the minimal baseline for comparison.
 
 from __future__ import annotations
 
-import os
 import time
 import uuid
 import numpy as np
