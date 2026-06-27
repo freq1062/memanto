@@ -15,8 +15,9 @@ import re
 import time
 import uuid
 
-from interfaces import DialogueTurn
-from interfaces import RetrievedItem, MemorySystem
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class CogneeAdapter(MemorySystem):
 
     def __init__(

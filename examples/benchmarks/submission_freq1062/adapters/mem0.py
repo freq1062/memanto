@@ -17,8 +17,9 @@ import time
 import uuid
 from pathlib import Path
 
-from interfaces import DialogueTurn
-from interfaces import RetrievedItem, MemorySystem
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class Mem0Adapter(MemorySystem):
 
     def __init__(

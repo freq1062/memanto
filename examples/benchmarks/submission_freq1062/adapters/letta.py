@@ -17,8 +17,9 @@ from __future__ import annotations
 import re
 import uuid
 
-from interfaces import DialogueTurn
-from interfaces import RetrievedItem, MemorySystem
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class LettaAdapter(MemorySystem):
     _required_env: list[str] = []
 
@@ -49,8 +50,8 @@ class LettaAdapter(MemorySystem):
         This is a workaround that calls ``Base.metadata.create_all()``
         on the SQLite database before the server starts.
         """
-        import os
         import asyncio
+        import os
         db_path = os.path.expanduser("~/.letta/letta.db")
         if os.path.exists(db_path):
             return  # db already initialized
@@ -63,8 +64,8 @@ class LettaAdapter(MemorySystem):
             # Force settings evaluation to pick up LETTA_DB_DIR
             _ = settings.database_engine
 
-            from letta.server.db import engine as _async_engine
             from letta.orm import Base
+            from letta.server.db import engine as _async_engine
 
             async def _create():
                 async with _async_engine.begin() as conn:

@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Literal
 
 from interfaces import (
-    _default_compute_scores,
     BenchmarkDataset,
     Conversation,
     Dataset,
@@ -21,6 +20,7 @@ from interfaces import (
     EvidenceSpan,
     QAPair,
     RetrievedItem,
+    _default_compute_scores,
 )
 
 # ---------------------------------------------------------------------------

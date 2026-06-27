@@ -11,8 +11,9 @@ import os
 import time
 import uuid
 
-from interfaces import DialogueTurn
-from interfaces import RetrievedItem, MemorySystem
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class ZepAdapter(MemorySystem):
     def __init__(self, api_key: str = "", batch_timeout: int = 120):
         self.api_key = api_key

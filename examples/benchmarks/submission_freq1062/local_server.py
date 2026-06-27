@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import json
 import os
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
 _llm = None
 _embed_model = None
 

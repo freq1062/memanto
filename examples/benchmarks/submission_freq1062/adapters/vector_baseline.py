@@ -6,11 +6,13 @@ cosine similarity.  Serves as the minimal baseline for comparison.
 
 from __future__ import annotations
 
-import numpy as np
 import time
 import uuid
 
-from interfaces import DialogueTurn, RetrievedItem, MemorySystem
+import numpy as np
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class VectorBaselineAdapter(MemorySystem):
     """In-memory vector store using cluster embeddings + cosine similarity.
 

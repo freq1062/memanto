@@ -15,8 +15,9 @@ import re
 import time
 import uuid
 
-from interfaces import DialogueTurn
-from interfaces import RetrievedItem, MemorySystem
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class SupermemoryAdapter(MemorySystem):
     _required_env: list[str] = ["SUPERMEMORY_API_KEY"]
 
@@ -31,6 +32,7 @@ class SupermemoryAdapter(MemorySystem):
 
     def setup(self) -> None:
         import os
+
         from supermemory import Supermemory
 
         api_key = self.api_key or os.environ.get("SUPERMEMORY_API_KEY", "")

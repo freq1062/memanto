@@ -15,7 +15,6 @@ import urllib.request
 from pathlib import Path
 
 from interfaces import (
-    _default_compute_scores,
     BenchmarkDataset,
     Conversation,
     Dataset,
@@ -23,6 +22,7 @@ from interfaces import (
     EvidenceSpan,
     QAPair,
     RetrievedItem,
+    _default_compute_scores,
 )
 
 CACHE_DIR = Path.home() / ".cache" / "memanto-benchmark"

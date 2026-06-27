@@ -13,6 +13,8 @@ import time
 from dataclasses import dataclass, field
 from statistics import median
 from typing import Any, Protocol, runtime_checkable
+
+
 @dataclass
 class EvidenceSpan:
     """Ground-truth evidence — which turns / sessions support a QA answer."""

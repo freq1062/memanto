@@ -9,8 +9,9 @@ import os
 import time
 import uuid
 
-from interfaces import DialogueTurn
-from interfaces import RetrievedItem, MemorySystem
+from interfaces import DialogueTurn, MemorySystem, RetrievedItem
+
+
 class MemantoAdapter(MemorySystem):
 
     def __init__(
@@ -79,8 +80,8 @@ class MemantoAdapter(MemorySystem):
                 print(f"    memanto namespace cleanup: {e}")
 
         # 2. Delete local sessions
-        from pathlib import Path
         import shutil
+        from pathlib import Path
         sessions = Path.home() / ".memanto" / "sessions"
         if sessions.exists():
             shutil.rmtree(sessions, ignore_errors=True)
