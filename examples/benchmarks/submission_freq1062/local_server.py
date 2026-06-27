@@ -11,9 +11,9 @@ Start with:
 
 from __future__ import annotations
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
+from http.server import HTTPServer, BaseHTTPRequestHandler
 _llm = None
 _embed_model = None
 

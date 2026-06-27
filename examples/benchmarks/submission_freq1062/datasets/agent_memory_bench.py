@@ -10,9 +10,9 @@ answer text.  This gives deterministic turn-level evidence like LoCoMo.
 
 from __future__ import annotations
 
-from pathlib import Path
 import json
 import urllib.request
+from pathlib import Path
 
 from interfaces import (
     _default_compute_scores,

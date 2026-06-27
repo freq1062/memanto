@@ -8,14 +8,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import argparse
 import json
 import os
-import sys
 import warnings
-
-import argparse
-warnings.filterwarnings("ignore")
+from datetime import datetime
 
 from interfaces import (
     BenchmarkDataset,
@@ -26,6 +23,8 @@ from interfaces import (
     format_category_breakdown,
     format_results_table,
 )
+
+warnings.filterwarnings("ignore")
 
 # ---------------------------------------------------------------------------
 # Discovery

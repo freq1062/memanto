@@ -9,11 +9,10 @@ Contains:
 
 from __future__ import annotations
 
-from typing import Any, Protocol, runtime_checkable
 import time
-
 from dataclasses import dataclass, field
 from statistics import median
+from typing import Any, Protocol, runtime_checkable
 @dataclass
 class EvidenceSpan:
     """Ground-truth evidence — which turns / sessions support a QA answer."""

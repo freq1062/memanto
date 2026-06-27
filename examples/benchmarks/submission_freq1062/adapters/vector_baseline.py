@@ -6,10 +6,9 @@ cosine similarity.  Serves as the minimal baseline for comparison.
 
 from __future__ import annotations
 
+import numpy as np
 import time
 import uuid
-
-import numpy as np
 
 from interfaces import DialogueTurn, RetrievedItem, MemorySystem
 class VectorBaselineAdapter(MemorySystem):
