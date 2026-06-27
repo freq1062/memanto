@@ -101,22 +101,26 @@ def run_benchmark(
     # Checkpoint file: {adapter}_{dataset}_ckpt.json
     ckpt_path = f"{a.name()}_{dataset.name}_ckpt.json"
     completed_ns: set[str] = set()
+    saved_queries: list = []
     if os.path.exists(ckpt_path):
         with open(ckpt_path) as f:
             ckpt = json.load(f)
         completed_ns = set(ckpt.get("completed_namespaces", []))
+        # Restore previously-computed query results
+        saved_queries = ckpt.get("saved_queries", [])
+        results.queries = saved_queries
         if completed_ns:
-            print(f"  Found checkpoint: {len(completed_ns)} namespaces done")
+            print(f"  Found checkpoint: {len(completed_ns)} namespaces done, {len(saved_queries)} queries restored")
 
     try:
         print("  Setting up …")
         a.setup()
 
         from tqdm import tqdm
+        qa_count = len(saved_queries)
         pbar = tqdm(total=min(dataset.total_qa_pairs, max_queries or 99999),
                     desc=f"  {adapter_cls.__name__}", unit="q", leave=False, ncols=80)
-
-        qa_count = 0
+        pbar.update(qa_count)  # account for restored queries
         for ci, conv in enumerate(dataset.conversations):
             ns = f"{dataset.name.lower()}-{conv.sample_id}"
 
@@ -141,10 +145,13 @@ def run_benchmark(
             if max_queries and qa_count >= max_queries:
                 break
 
-            # Save checkpoint after each conversation
+            # Save checkpoint after each conversation (queries + namespaces)
             completed_ns.add(ns)
             with open(ckpt_path, "w") as f:
-                json.dump({"completed_namespaces": list(completed_ns)}, f)
+                json.dump({
+                    "completed_namespaces": list(completed_ns),
+                    "saved_queries": results.queries,
+                }, f)
 
         pbar.close()
 
