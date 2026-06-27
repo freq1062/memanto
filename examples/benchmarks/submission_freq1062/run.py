@@ -97,7 +97,7 @@ def run_benchmark(
 
     a = adapter_cls(**(adapter_kwargs or {}))
     results = SystemResults(system_name=a.name(), dataset_name=dataset.name)
-    
+
     # Checkpoint file: {adapter}_{dataset}_ckpt.json
     ckpt_path = f"{a.name()}_{dataset.name}_ckpt.json"
     completed_ns: set[str] = set()
@@ -119,13 +119,13 @@ def run_benchmark(
         qa_count = 0
         for ci, conv in enumerate(dataset.conversations):
             ns = f"{dataset.name.lower()}-{conv.sample_id}"
-            
+
             if ns in completed_ns:
                 print(f"  Skipping conv {ci+1} (checkpointed)")
                 qa_count += len(conv.qa_pairs)
                 pbar.update(len(conv.qa_pairs))
                 continue
-                
+
             pbar.set_description(f"  Store conv {ci+1}/{len(dataset.conversations)}")
             a.store_turns(conv.turns, ns)
 
@@ -140,12 +140,12 @@ def run_benchmark(
 
             if max_queries and qa_count >= max_queries:
                 break
-            
+
             # Save checkpoint after each conversation
             completed_ns.add(ns)
             with open(ckpt_path, "w") as f:
                 json.dump({"completed_namespaces": list(completed_ns)}, f)
-                
+
         pbar.close()
 
     finally:

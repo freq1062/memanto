@@ -267,7 +267,8 @@ def _default_compute_scores(
         retrieved_session_ids: set[str] = {r.session_id for r in top_k}
         if evidence_session_ids:
             recall = len(retrieved_session_ids & evidence_session_ids) / len(evidence_session_ids)
-            precision = len(retrieved_session_ids & evidence_session_ids) / len(retrieved_session_ids) if retrieved_session_ids else 0.0
+            precision = (len(retrieved_session_ids & evidence_session_ids) /
+                         len(retrieved_session_ids) if retrieved_session_ids else 0.0)
         else:
             recall = precision = 0.0
     else:
@@ -344,7 +345,7 @@ def format_results_table(results: list[SystemResults]) -> str:
     k_cols = " | ".join(f"Recall@{k}" for k in k_values)
     lines = [
         f"| System | Dataset | Queries | {k_cols} | Stale% | Tokens | p95 Lat |",
-        f"|--------|---------|--------:" + "|".join(":------:" for _ in k_values) + 
+        f"|--------|---------|--------:" + "|".join(":------:" for _ in k_values) +
         "|-------:|-------:|--------:|",
     ]
     for r in results:

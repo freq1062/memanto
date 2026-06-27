@@ -128,7 +128,8 @@ class SupermemoryAdapter(MemorySystem):
             total = 0
             while True:
                 resp = cli.documents.list()
-                mems = resp.memories if hasattr(resp, "memories") else (resp.results if hasattr(resp, "results") else [])
+                mems = resp.memories if hasattr(resp, "memories") \
+                       else (resp.results if hasattr(resp, "results") else [])
                 if not mems:
                     break
                 ids = [m.id for m in mems if hasattr(m, "id")]
