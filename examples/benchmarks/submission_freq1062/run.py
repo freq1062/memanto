@@ -37,7 +37,8 @@ ADAPTERS: dict[str, type[MemorySystem]] = {}
 
 
 def _discover_adapters() -> None:
-    import importlib, pkgutil
+    import importlib
+    import pkgutil
     from pathlib import Path
     adapters_path = str(Path(__file__).resolve().parent / "adapters")
     for _, name, _ in pkgutil.iter_modules([adapters_path]):
@@ -251,7 +252,8 @@ def main() -> None:
         # Adapters
         for aname in active:
             if aname not in ADAPTERS:
-                print(f"\n  {aname}: UNKNOWN"); continue
+                print(f"\n  {aname}: UNKNOWN")
+                continue
             cls = ADAPTERS[aname]
             print(f"\n--- {cls.__name__} ---")
             inst = cls()
@@ -261,7 +263,8 @@ def main() -> None:
         # Datasets
         for dname in args.datasets:
             if dname not in DATASETS:
-                print(f"\n  {dname}: UNKNOWN"); continue
+                print(f"\n  {dname}: UNKNOWN")
+                continue
             ds_cls = DATASETS[dname]
             print(f"\n--- {ds_cls.__name__} ---")
             try:
@@ -318,7 +321,8 @@ def main() -> None:
 
         for aname in active:
             if aname not in ADAPTERS:
-                print(f"  Skipping unknown: {aname}"); continue
+                print(f"  Skipping unknown: {aname}")
+                continue
             res = run_benchmark(
                 ds, ds_inst, ADAPTERS[aname],
                 k=args.k, max_queries=args.max_queries,

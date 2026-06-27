@@ -11,7 +11,6 @@ API docs: https://supermemory.ai/docs/search, https://supermemory.ai/docs/add-me
 
 from __future__ import annotations
 
-import os
 import re
 import time
 import uuid
@@ -70,7 +69,7 @@ class SupermemoryAdapter(MemorySystem):
             return []
 
         # Poll up to 3 times for async indexing
-        for attempt in range(3):
+        for _attempt in range(3):
             try:
                 resp = self._client.search.documents(
                     q=query,

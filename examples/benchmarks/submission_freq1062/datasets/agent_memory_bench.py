@@ -196,5 +196,5 @@ class AgentMemoryBenchDataset(Dataset):
             print(f"    ✗  perfect hit recall={recall} (expected 1.0)")
             return False
 
-        print(f"    ✓  compute_metrics OK (recall=1.0)")
+        print("    ✓  compute_metrics OK (recall=1.0)")
         return True

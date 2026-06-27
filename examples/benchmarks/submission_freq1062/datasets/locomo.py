@@ -8,7 +8,6 @@ turns.  Scoring is deterministic — no LLM judge needed.
 from __future__ import annotations
 
 import json
-import os
 import urllib.request
 from pathlib import Path
 from typing import Literal
@@ -183,6 +182,7 @@ class LoCoMoDataset(Dataset):
         for sid, sess in zip(
             item.get("haystack_session_ids", []),
             item.get("haystack_sessions", []),
+            strict=True,
         ):
             for ti, msg in enumerate(sess):
                 turns.append(DialogueTurn(
@@ -261,5 +261,5 @@ class LoCoMoDataset(Dataset):
             print(f"    ✗  perfect hit recall={recall} (expected 1.0)")
             return False
 
-        print(f"    ✓  evidence mapping OK, metrics compute correctly")
+        print("    ✓  evidence mapping OK, metrics compute correctly")
         return True

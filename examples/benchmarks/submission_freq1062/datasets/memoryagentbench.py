@@ -21,7 +21,6 @@ from interfaces import (
     Conversation,
     Dataset,
     DialogueTurn,
-    EvidenceSpan,
     QAPair,
     RetrievedItem,
 )
@@ -159,11 +158,9 @@ class MemoryAgentBenchDataset(Dataset):
         if judge_fn is None:
             # Default: use Groq judge built into providers
             from providers import groq_judge as _judge
-            judge_fn = lambda q, a, texts: _judge(
-                q, a, texts,
-                model=self.judge_model,
-                api_key=self.judge_api_key,
-            )
+            def _judge_fn(q, a, texts):
+                return _judge(q, a, texts, model=self.judge_model, api_key=self.judge_api_key)
+            judge_fn = _judge_fn
 
         try:
             correct = judge_fn(qa.question, qa.answer, texts)

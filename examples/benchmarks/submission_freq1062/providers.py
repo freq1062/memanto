@@ -73,7 +73,7 @@ class KeyRing:
         for _ in range(len(self.keys)):
             if self.idx not in self.exhausted:
                 key = self.keys[self.idx]
-                masked = key[:8] + "..." + key[-4:]
+                _masked = key[:8] + "..." + key[-4:]
                 return key
             self.idx = (self.idx + 1) % len(self.keys)
 

@@ -55,7 +55,7 @@ class Conversation:
 
     @property
     def session_ids(self) -> list[str]:
-        return sorted(set(t.session_id for t in self.turns),
+        return sorted({t.session_id for t in self.turns},
                       key=lambda s: int(s.split("_")[-1]) if s.split("_")[-1].isdigit() else 0)
 
 
@@ -350,7 +350,7 @@ def format_results_table(results: list[SystemResults]) -> str:
     k_cols = " | ".join(f"Recall@{k}" for k in k_values)
     lines = [
         f"| System | Dataset | Queries | {k_cols} | Stale% | Tokens | p95 Lat |",
-        f"|--------|---------|--------:" + "|".join(":------:" for _ in k_values) +
+        "|--------|---------|--------:" + "|".join(":------:" for _ in k_values) +
         "|-------:|-------:|--------:|",
     ]
     for r in results:

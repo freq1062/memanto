@@ -209,7 +209,7 @@ class Mem0Adapter(MemorySystem):
             self.setup()
             print("    ✓ setup")
 
-            print("  [dry-run] store (infer=%s) …" % self.infer)
+            print(f"  [dry-run] store (infer={self.infer}) …")
             self.store_turns([test_turn], ns)
             print("    ✓ store")
 

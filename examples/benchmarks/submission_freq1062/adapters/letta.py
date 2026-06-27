@@ -50,7 +50,8 @@ class LettaAdapter(MemorySystem):
         This is a workaround that calls ``Base.metadata.create_all()``
         on the SQLite database before the server starts.
         """
-        import os, asyncio
+        import os
+        import asyncio
         db_path = os.path.expanduser("~/.letta/letta.db")
         if os.path.exists(db_path):
             return  # db already initialized

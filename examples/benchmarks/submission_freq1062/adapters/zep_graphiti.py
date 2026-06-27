@@ -98,7 +98,7 @@ class ZepAdapter(MemorySystem):
                 print(f"    zep batch error: {e}")
                 # Fallback: individual adds with rate handling
                 for item in items:
-                    for attempt in range(3):
+                    for _attempt in range(3):
                         try:
                             self._client.graph.add(**item)
                             break
@@ -220,8 +220,12 @@ class ZepAdapter(MemorySystem):
         t = DialogueTurn(dia_id="DRY:1", speaker="tester",
                          text="The sky is cerulean today.", session_id="dry-session")
         try:
-            print("  [dry-run] setup …"); self.setup(); print("    ✓ setup")
-            print("  [dry-run] store …"); self.store_turns([t], ns); print("    ✓ store")
+            print("  [dry-run] setup …")
+            self.setup()
+            print("    ✓ setup")
+            print("  [dry-run] store …")
+            self.store_turns([t], ns)
+            print("    ✓ store")
             print("  [dry-run] search …")
             r = self.search("What color is the sky?", ns, k=3)
             print(f"    ✓ {len(r)} results")

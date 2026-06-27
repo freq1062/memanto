@@ -53,7 +53,7 @@ class VectorBaselineAdapter(MemorySystem):
             texts = [t.text for t in batch]
             embs = local_embed(texts)
             if isinstance(embs, list) and len(embs) == len(batch):
-                for t, e in zip(batch, embs):
+                for t, e in zip(batch, embs, strict=True):
                     turn_list.append(t)
                     emb_list.append(np.array(e, dtype=np.float32))
             if self.pacing:
@@ -99,7 +99,7 @@ class VectorBaselineAdapter(MemorySystem):
     # ------------------------------------------------------------------
 
     def dry_run(self) -> bool:
-        from providers import check_keys, local_embed
+        from providers import check_keys
         if not check_keys("CLUSTER_API_KEY"):
             pass
 
