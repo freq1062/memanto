@@ -5,11 +5,11 @@
 </p>
 
 <div align="center">
-  <h1>Your agents focus. Memanto remembers.</h1>
+  <h1>Memory that AI Agents Love!</h1>
 </div>
 
 <h2 align="center">
-  <em>A companion memory agent with its own intelligence that keeps your agents focused on their tasks.</em>
+  <em>A companion memory agent that lets your agents focus and improve while you keep ownership of everything they learn.</em>
 </h2>
 
 <p align="center">
@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/CyxRFQSQ3p">
+  <a href="https://memanto.ai/discord">
     <img src="https://img.shields.io/badge/Join-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord">
   </a>
   <a href="https://www.youtube.com/watch?v=vEtOaoweIG4">
@@ -184,7 +184,7 @@ This means Memanto doesn't need a separate vector DB, embedding pipeline, or rer
 | Local REST API + Web UI | `memanto serve`, `memanto ui` | Run the MEMANTO REST API locally and open an interactive browser UI. (Optional for CLI usage). |
 | Agent lifecycle management | `memanto agent ...` | Create/list/delete agents, activate/deactivate sessions, and run `agent bootstrap` for an intelligence snapshot. |
 | Memory capture at scale | `memanto remember` | Store single memories, batch-ingest from JSON, or `--from-conversation` to automatically extract facts from chat logs. |
-| Single-memory deletion | `memanto forget` | Delete one bad or outdated memory from the active agent after confirmation, or without the prompt with `--force`. |
+| Single-memory editing & deletion | `memanto edit`, `memanto forget` | Update fields on an existing memory, or permanently delete a bad/outdated memory. |
 | File upload to memory | `memanto upload` | Upload documents (.pdf, .docx, .xlsx, .json, .txt, .csv, .md) directly into an agent's memory namespace — content becomes instantly searchable via `recall`. |
 | Advanced retrieval modes | `memanto recall` | Run standard search plus temporal queries (`--as-of`, `--changed-since`) with filters. |
 | Grounded QA over memory | `memanto answer` | Generate RAG answers using retrieved memory context. |
@@ -203,6 +203,12 @@ For a complete command reference, see the [CLI User Guide](https://docs.memanto.
 Use memory types to categorize what you store so retrieval is cleaner and more controllable:
 - Save with a specific type: `memanto remember "User prefers concise answers" --type preference`
 - Filter by type when searching: `memanto recall "user communication style" --type preference`
+
+---
+
+## 📦 SDKs
+
+- **TypeScript / Node.js** — [`@moorcheh-ai/memanto`](sdks/typescript) — boots a local Memanto server via `uvx` and exposes an ergonomic `Memanto` client (`remember` / `recall` / `answer`).
 
 ---
 
@@ -240,7 +246,7 @@ Full endpoint reference is available at [docs.memanto.ai/api](https://docs.meman
 
 Have questions or feedback? We're here to help:
 - **Docs**: [https://docs.memanto.ai](https://docs.memanto.ai)
-- **Discord**: [Join our Discord server](https://discord.gg/CyxRFQSQ3p)
+- **Discord**: [Join our Discord server](https://memanto.ai/discord)
 - **Email**: support@moorcheh.ai
 - **X / Twitter**: [@moorcheh_ai](https://x.com/moorcheh_ai)
 
